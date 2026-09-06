@@ -16,7 +16,7 @@ public final class InitialExperiment {
                 .testFramework("junit")
                 .dependsOnExternal("org.junit.jupiter", "junit-jupiter", "5.13.4", DependencyScope.TEST);
         model.module("web")
-                .dependsOn("app", DependencyScope.RUNTIME);
+                .dependsOn("app", DependencyScope.COMPILE);
         model.generation("app-sources", "generator", "app",
                 "dev.blackdrag.simpledsl.fixture.generator.GenerateSources",
                 "generated/sources");
