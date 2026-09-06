@@ -10,4 +10,11 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>backend-api</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>dev.blackdrag.simpledsl</groupId>
+      <artifactId>build-model</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
 </project>
