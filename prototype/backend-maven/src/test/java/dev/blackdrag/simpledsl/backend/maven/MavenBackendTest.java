@@ -27,7 +27,9 @@ class MavenBackendTest {
         assertTrue(appPom.contains("<artifactId>exec-maven-plugin</artifactId>"));
         assertTrue(appPom.contains("<phase>generate-sources</phase>"));
         assertTrue(appPom.contains("<mainClass>dev.blackdrag.simpledsl.fixture.generator.GenerateSources</mainClass>"));
-        assertTrue(appPom.contains("../generator/target/classes"));
+        assertTrue(appPom.contains("<includePluginDependencies>true</includePluginDependencies>"));
+        assertTrue(appPom.contains("<executableDependency>"));
+        assertTrue(appPom.contains("<artifactId>generator</artifactId>"));
         assertTrue(appPom.contains("<artifactId>build-helper-maven-plugin</artifactId>"));
         assertTrue(appPom.contains("<source>${project.basedir}/generated/sources</source>"));
     }
