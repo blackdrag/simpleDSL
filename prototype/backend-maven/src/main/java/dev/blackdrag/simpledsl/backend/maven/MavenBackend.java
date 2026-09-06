@@ -83,13 +83,20 @@ public final class MavenBackend implements BuildBackend {
             if (!generation.targetModule().equals(module.name())) {
                 continue;
             }
-            String generatorClasses = "${project.basedir}/../" + generation.generatorModule() + "/target/classes";
+            Module generator = model.module(generation.generatorModule());
             result.append("  <build>\n")
                     .append("    <plugins>\n")
                     .append("      <plugin>\n")
                     .append("        <groupId>org.codehaus.mojo</groupId>\n")
                     .append("        <artifactId>exec-maven-plugin</artifactId>\n")
                     .append("        <version>3.6.3</version>\n")
+                    .append("        <dependencies>\n")
+                    .append("          <dependency>\n")
+                    .append("            <groupId>dev.blackdrag.generated</groupId>\n")
+                    .append("            <artifactId>").append(generator.name()).append("</artifactId>\n")
+                    .append("            <version>1.0-SNAPSHOT</version>\n")
+                    .append("          </dependency>\n")
+                    .append("        </dependencies>\n")
                     .append("        <executions>\n")
                     .append("          <execution>\n")
                     .append("            <id>generate-").append(generation.name()).append("</id>\n")
@@ -98,9 +105,6 @@ public final class MavenBackend implements BuildBackend {
                     .append("            <configuration>\n")
                     .append("              <mainClass>").append(generation.mainClass()).append("</mainClass>\n")
                     .append("              <includeProjectDependencies>false</includeProjectDependencies>\n")
-                    .append("              <additionalClasspathElements>\n")
-                    .append("                <additionalClasspathElement>").append(generatorClasses).append("</additionalClasspathElement>\n")
-                    .append("              </additionalClasspathElements>\n")
                     .append("              <arguments><argument>${project.basedir}/").append(generation.outputDirectory()).append("</argument></arguments>\n")
                     .append("            </configuration>\n")
                     .append("          </execution>\n")
