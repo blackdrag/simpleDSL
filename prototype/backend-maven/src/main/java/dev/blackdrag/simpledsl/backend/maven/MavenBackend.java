@@ -4,6 +4,7 @@ import dev.blackdrag.simpledsl.backend.BuildBackend;
 import dev.blackdrag.simpledsl.model.BuildModel;
 import dev.blackdrag.simpledsl.model.DependencyScope;
 import dev.blackdrag.simpledsl.model.ExternalDependency;
+import dev.blackdrag.simpledsl.model.Generation;
 import dev.blackdrag.simpledsl.model.Module;
 
 import java.io.IOException;
@@ -70,7 +71,55 @@ public final class MavenBackend implements BuildBackend {
                     <maven.compiler.release>""" + compilerRelease + """</maven.compiler.release>
                   </properties>
                   <dependencies>
-                """ + dependencies + "  </dependencies>\n</project>\n""";
+                """ + dependencies + "  </dependencies>\n" + generationBuild(module, model) + "</project>\n";
+    }
+
+    private static String generationBuild(Module module, BuildModel model) {
+        StringBuilder result = new StringBuilder();
+        for (Generation generation : model.generations()) {
+            if (!generation.targetModule().equals(module.name())) {
+                continue;
+            }
+            String generatorClasses = "${project.basedir}/../" + generation.generatorModule() + "/target/classes";
+            result.append("  <build>\n")
+                    .append("    <plugins>\n")
+                    .append("      <plugin>\n")
+                    .append("        <groupId>org.codehaus.mojo</groupId>\n")
+                    .append("        <artifactId>exec-maven-plugin</artifactId>\n")
+                    .append("        <version>3.6.3</version>\n")
+                    .append("        <executions>\n")
+                    .append("          <execution>\n")
+                    .append("            <id>generate-").append(generation.name()).append("</id>\n")
+                    .append("            <phase>generate-sources</phase>\n")
+                    .append("            <goals><goal>java</goal></goals>\n")
+                    .append("            <configuration>\n")
+                    .append("              <mainClass>").append(generation.mainClass()).append("</mainClass>\n")
+                    .append("              <includeProjectDependencies>false</includeProjectDependencies>\n")
+                    .append("              <additionalClasspathElements>\n")
+                    .append("                <additionalClasspathElement>").append(generatorClasses).append("</additionalClasspathElement>\n")
+                    .append("              </additionalClasspathElements>\n")
+                    .append("              <arguments><argument>${project.basedir}/").append(generation.outputDirectory()).append("</argument></arguments>\n")
+                    .append("            </configuration>\n")
+                    .append("          </execution>\n")
+                    .append("        </executions>\n")
+                    .append("      </plugin>\n")
+                    .append("      <plugin>\n")
+                    .append("        <groupId>org.codehaus.mojo</groupId>\n")
+                    .append("        <artifactId>build-helper-maven-plugin</artifactId>\n")
+                    .append("        <version>3.6.1</version>\n")
+                    .append("        <executions>\n")
+                    .append("          <execution>\n")
+                    .append("            <id>add-generated-sources-").append(generation.name()).append("</id>\n")
+                    .append("            <phase>generate-sources</phase>\n")
+                    .append("            <goals><goal>add-source</goal></goals>\n")
+                    .append("            <configuration><sources><source>${project.basedir}/").append(generation.outputDirectory()).append("</source></sources></configuration>\n")
+                    .append("          </execution>\n")
+                    .append("        </executions>\n")
+                    .append("      </plugin>\n")
+                    .append("    </plugins>\n")
+                    .append("  </build>\n");
+        }
+        return result;
     }
 
     private static void appendModuleDependency(StringBuilder result, String target, DependencyScope scope) {

@@ -4,6 +4,7 @@ import dev.blackdrag.simpledsl.backend.BuildBackend;
 import dev.blackdrag.simpledsl.model.BuildModel;
 import dev.blackdrag.simpledsl.model.DependencyScope;
 import dev.blackdrag.simpledsl.model.ExternalDependency;
+import dev.blackdrag.simpledsl.model.Generation;
 import dev.blackdrag.simpledsl.model.Module;
 
 import java.io.IOException;
@@ -29,7 +30,9 @@ public final class GradleBackend implements BuildBackend {
 
     private static String moduleBuild(Module module, BuildModel model) {
         String release = module.compiler() == null ? "21" : compilerRelease(module.compiler());
-        StringBuilder result = new StringBuilder("plugins { id 'java' }\n\njava { toolchain { languageVersion = JavaLanguageVersion.of(" + release + ") } }\n\ndependencies {\n");
+        StringBuilder result = new StringBuilder("plugins { id 'java' }\n\njava { toolchain { languageVersion = JavaLanguageVersion.of(" + release + ") } }\n\n");
+        appendGenerationConfiguration(result, module, model);
+        result.append("dependencies {\n");
         module.dependencies().stream()
                 .filter(d -> model.modules().containsKey(d.target()))
                 .forEach(d -> {
@@ -51,13 +54,37 @@ public final class GradleBackend implements BuildBackend {
                 case BUILD -> null;
             };
             if (configuration != null) {
-                result.append("    ").append(configuration).append(" '" )
-                        .append(dependency.groupId()).append(":" )
-                        .append(dependency.artifactId()).append(":" )
+                result.append("    ").append(configuration).append(" '")
+                        .append(dependency.groupId()).append(":")
+                        .append(dependency.artifactId()).append(":")
                         .append(dependency.version()).append("'\n");
             }
         }
         return result.append("}\n").toString();
+    }
+
+    private static void appendGenerationConfiguration(StringBuilder result, Module module, BuildModel model) {
+        for (Generation generation : model.generations()) {
+            if (!generation.targetModule().equals(module.name())) {
+                continue;
+            }
+            String taskName = "generate" + capitalize(generation.name());
+            String output = generation.outputDirectory();
+            result.append("sourceSets.main.java.srcDir('").append(output).append("')\n\n")
+                    .append("tasks.register('").append(taskName).append("', JavaExec) {\n")
+                    .append("    classpath = project(':").append(generation.generatorModule()).append("').sourceSets.main.runtimeClasspath\n")
+                    .append("    mainClass = '").append(generation.mainClass()).append("'\n")
+                    .append("    args file('").append(output).append("')\n")
+                    .append("    dependsOn project(':").append(generation.generatorModule()).append("').tasks.named('classes')\n")
+                    .append("    outputs.dir file('").append(output).append("')\n")
+                    .append("}\n")
+                    .append("tasks.named('compileJava') { dependsOn '").append(taskName).append("' }\n\n");
+        }
+    }
+
+    private static String capitalize(String value) {
+        if (value.isEmpty()) return value;
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1).replace('-', '_');
     }
 
     private static String compilerRelease(String compiler) {
