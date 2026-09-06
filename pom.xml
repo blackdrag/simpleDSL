@@ -12,6 +12,8 @@
   <modules>
     <module>prototype/build-model</module>
     <module>prototype/backend-api</module>
+    <module>prototype/backend-maven</module>
+    <module>prototype/backend-gradle</module>
   </modules>
 
   <properties>
