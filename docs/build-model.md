@@ -22,25 +22,50 @@ For non-exact version constraints, the primary portable version model is SemVer.
 
 A backend-native form may be useful when the user deliberately wants the dependency system of the selected backend to make the decision. This should be explicit (for example, `native`) rather than implying a vague meaning such as `latest`. `latest`, if supported at all, is a tool or backend capability rather than a universal DSL promise about which version will be selected.
 
-Dependencies introduced transitively by external dependencies are initially treated as exact at the version selected by the backend. This makes the backend's first resolution a source of concrete dependency information without requiring the DSL to reproduce every ecosystem's dependency-resolution algorithm.
-
 ### Dependency resolution
 
 The project aims for backend-independent dependency declarations, not a universal replacement for Maven, Gradle, npm, or other dependency resolvers.
 
-The backend may perform an initial native resolution of the dependency graph. Simplified Build DSL can then inspect that concrete result and make the consequences explicit and reproducible. In particular, conflicting transitive versions should not simply disappear because one backend happened to choose one version by its own conflict-resolution rules.
+The general tool is responsible for interpreting the dependency requirements expressed by the DSL. For SemVer requirements, it collects the constraints imposed on a dependency and calculates their intersection. This gives one semantic requirement that the selected backend is expected to satisfy.
 
 For example:
 
 ```text
 A
 ├── B
-│   └── foo:1.0
+│   └── foo:^1.2
 └── C
-    └── foo:2.0
+    └── foo:^1.3
 ```
 
-If the backend resolves this graph to `foo:2.0`, the tool can suggest declaring `foo:2.0` explicitly. The user remains in control of whether and how the DSL is changed.
+The intersection of the requirements is `^1.3`. If the intersection is empty, the DSL requirements are contradictory and the tool should report this as a DSL error, explaining which requirements caused the contradiction and why they cannot be satisfied together.
+
+If the intersection is non-empty, the backend is responsible for resolving a concrete version that satisfies it. The backend may use its native dependency resolver rather than reproducing Maven, Gradle, npm, or another ecosystem's resolution algorithm.
+
+There are therefore several distinct outcomes:
+
+- **Empty intersection:** the DSL contains mutually incompatible requirements. This is a DSL error.
+- **Non-empty intersection, but no available dependency satisfies it:** the user's requirement is logically valid, but dependency resolution cannot fulfill it. This is a dependency resolution error.
+- **The backend resolves a version inside the intersection:** the resolution satisfies the DSL requirements.
+- **The backend resolves a version outside the intersection:** the backend did not honor the DSL requirement. The tool must report the violation even if the reason is unknown. The backend may provide a backend-specific explanation or workaround.
+
+The backend is responsible for the parts that depend on its native capabilities: translating the DSL requirement, performing resolution, inspecting the resolved graph, detecting when the result violates the requested constraint, and advising the user about backend-specific limitations or configuration. The core DSL should not acquire backend-specific concepts merely to work around such a limitation.
+
+The diagnostic should distinguish the semantic expectation from the backend result. For example, if the DSL requires `^1.3` and the backend selects `2.0.0`, the tool should be able to state that `^1.3` was the expected requirement and that `2.0.0` does not satisfy it. If the backend cannot faithfully represent or enforce the requested range, it may advise the user to use an exact version or another backend-specific solution.
+
+Transitive dependencies do not need to become explicit DSL declarations merely because they are transitive. If all dependency paths impose the same version requirement or the resulting requirement has a single unambiguous resolution, no additional declaration is needed. Once different transitive requirements require a version decision, that decision must be represented explicitly by the user in the DSL rather than silently depending on a backend's conflict-resolution policy.
+
+For example:
+
+```text
+A
+├── B
+│   └── foo:^1.2
+└── C
+    └── foo:^1.3
+```
+
+requires the effective requirement `^1.3`, but does not require another declaration if that requirement is already represented by the DSL. In contrast, incompatible requirements such as `^1.2` and `^2.0` have an empty intersection and must be reported as contradictory requirements.
 
 Dependency resolution is therefore expected to be a feedback loop:
 
@@ -48,22 +73,27 @@ Dependency resolution is therefore expected to be a feedback loop:
 DSL declarations
       |
       v
-native backend resolution
+constraint intersection
+      |
+      v
+backend-native resolution
       |
       v
 resolved dependency graph
       |
       v
-conflict / reproducibility analysis
+validation against DSL requirements
       |
       v
-user-visible suggestions
+user-visible diagnostics / suggestions
       |
       v
 user edits the DSL
 ```
 
-A future lock representation may record the concrete resolved result, while the DSL remains the source of user intent.
+The user remains in control of changing the DSL. Backend-specific advice may explain how to make a valid DSL requirement work with that backend, but such advice does not become part of the backend-independent model.
+
+A future lock representation may record the concrete resolved result, while the DSL remains the source of user intent. Locking is a backend-specific implementation detail and may use either a tool-generated lock or the native lock mechanism of the selected backend.
 
 ### What-if dependency checks
 
