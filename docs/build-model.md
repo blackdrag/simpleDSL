@@ -16,7 +16,11 @@ External dependencies are declared in the model rather than expressed directly i
 
 An exact version is the simplest and strongest form of declaration. For example, declaring `2.0` means that version `2.0` is required; a different version such as `2.1` is a conflict rather than a backend-defined choice.
 
-The model may also provide explicitly defined forms of version flexibility. The intended semantics should control which part of a version is allowed to change instead of assuming that every ecosystem uses the same version format. A backend-native form may also be useful when the user deliberately wants the dependency system of the selected backend to make the decision. This should be explicit (for example, `native`) rather than implying a vague meaning such as `latest`.
+Exact versions are treated as opaque version identifiers. They do not have to follow Semantic Versioning (SemVer). Versions such as `1.0.0.Final`, `2026.09`, or vendor-qualified versions can therefore be used as exact versions without the DSL having to interpret their structure.
+
+For non-exact version constraints, the primary portable version model is SemVer. The DSL may define constraints that allow controlled changes to a SemVer version, such as changes within a patch or minor range. A non-exact constraint is only meaningful where the version can be interpreted according to the DSL's SemVer rules; arbitrary ecosystem-specific version strings remain exact-only unless a backend-native form is explicitly requested.
+
+A backend-native form may be useful when the user deliberately wants the dependency system of the selected backend to make the decision. This should be explicit (for example, `native`) rather than implying a vague meaning such as `latest`. `latest`, if supported at all, is a tool or backend capability rather than a universal DSL promise about which version will be selected.
 
 Dependencies introduced transitively by external dependencies are initially treated as exact at the version selected by the backend. This makes the backend's first resolution a source of concrete dependency information without requiring the DSL to reproduce every ecosystem's dependency-resolution algorithm.
 
