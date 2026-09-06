@@ -61,6 +61,9 @@ public final class GradleBackend implements BuildBackend {
                         .append(dependency.version()).append("'\n");
             }
         }
+        if ("junit".equals(module.testFramework())) {
+            result.append("    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'\n");
+        }
         return result.append("}\n").toString();
     }
 
