@@ -11,6 +11,7 @@
 
   <modules>
     <module>prototype/build-model</module>
+    <module>prototype/backend-api</module>
   </modules>
 
   <properties>
