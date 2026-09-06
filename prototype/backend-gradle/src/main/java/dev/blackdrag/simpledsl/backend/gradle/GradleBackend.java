@@ -20,7 +20,7 @@ public final class GradleBackend implements BuildBackend {
             settings.append("include ':").append(module.name()).append("'\n");
         }
         write(outputDirectory.resolve("settings.gradle"), settings.toString());
-        write(outputDirectory.resolve("build.gradle"), "allprojects { group = 'dev.blackdrag.generated'; version = '1.0-SNAPSHOT' }\n");
+        write(outputDirectory.resolve("build.gradle"), "allprojects { group = 'dev.blackdrag.generated'; version = '1.0-SNAPSHOT' }\n\nallprojects { repositories { mavenCentral() } }\n");
         for (Module module : model.modules().values()) {
             Path dir = outputDirectory.resolve(module.name());
             Files.createDirectories(dir);
