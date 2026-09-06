@@ -11,17 +11,11 @@ java -cp "$CLI_CP" dev.blackdrag.simpledsl.cli.Main maven "$ROOT/target/integrat
 java -cp "$CLI_CP" dev.blackdrag.simpledsl.cli.Main gradle "$ROOT/target/integration/gradle"
 
 for backend in maven gradle; do
-  cp -R "$ROOT/prototype/fixture/." "$ROOT/target/integration/$backend/fixture"
+  for module in core generator app web; do
+    mkdir -p "$ROOT/target/integration/$backend/$module"
+    cp -R "$ROOT/prototype/fixture/$module/src" "$ROOT/target/integration/$backend/$module/"
+  done
 done
-
-cp -R "$ROOT/prototype/fixture/core/." "$ROOT/target/integration/maven/core/"
-cp -R "$ROOT/prototype/fixture/generator/." "$ROOT/target/integration/maven/generator/"
-cp -R "$ROOT/prototype/fixture/app/." "$ROOT/target/integration/maven/app/"
-cp -R "$ROOT/prototype/fixture/web/." "$ROOT/target/integration/maven/web/"
-cp -R "$ROOT/prototype/fixture/core/." "$ROOT/target/integration/gradle/core/"
-cp -R "$ROOT/prototype/fixture/generator/." "$ROOT/target/integration/gradle/generator/"
-cp -R "$ROOT/prototype/fixture/app/." "$ROOT/target/integration/gradle/app/"
-cp -R "$ROOT/prototype/fixture/web/." "$ROOT/target/integration/gradle/web/"
 
 mvn -q -f "$ROOT/target/integration/maven/pom.xml" test
 
