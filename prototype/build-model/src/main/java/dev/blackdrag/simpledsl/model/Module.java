@@ -7,6 +7,7 @@ import java.util.Objects;
 public final class Module {
     private final String name;
     private final List<Dependency> dependencies = new ArrayList<>();
+    private final List<ExternalDependency> externalDependencies = new ArrayList<>();
     private String compiler;
     private String generator;
     private String testFramework;
@@ -17,12 +18,18 @@ public final class Module {
 
     public String name() { return name; }
     public List<Dependency> dependencies() { return List.copyOf(dependencies); }
+    public List<ExternalDependency> externalDependencies() { return List.copyOf(externalDependencies); }
     public String compiler() { return compiler; }
     public String generator() { return generator; }
     public String testFramework() { return testFramework; }
 
     public Module dependsOn(String target, DependencyScope scope) {
         dependencies.add(new Dependency(target, scope));
+        return this;
+    }
+
+    public Module dependsOnExternal(String groupId, String artifactId, String version, DependencyScope scope) {
+        externalDependencies.add(new ExternalDependency(groupId, artifactId, version, scope));
         return this;
     }
 
