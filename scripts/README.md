@@ -1,0 +1,1 @@
+Run `mvn -q package` first, then execute `scripts/integration-test.sh` from the repository root. The script generates the same semantic fixture with both backends, copies the fixture sources into the generated projects, and runs their tests.
