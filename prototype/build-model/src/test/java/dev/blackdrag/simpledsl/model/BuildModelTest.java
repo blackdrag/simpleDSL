@@ -17,15 +17,17 @@ class BuildModelTest {
         model.module("app")
                 .dependsOn("core", DependencyScope.COMPILE)
                 .dependsOn("generator", DependencyScope.BUILD)
-                .dependsOn("junit", DependencyScope.TEST)
+                .dependsOnExternal("org.junit.jupiter", "junit-jupiter", "5.13.4", DependencyScope.TEST)
                 .compiler("java21")
                 .testFramework("junit");
         model.module("web")
                 .dependsOn("app", DependencyScope.RUNTIME);
 
         assertEquals(4, model.modules().size());
-        assertEquals(4, model.module("app").dependencies().size());
+        assertEquals(2, model.module("app").dependencies().size());
+        assertEquals(1, model.module("app").externalDependencies().size());
         assertTrue(model.module("app").dependencies().stream()
                 .anyMatch(d -> d.scope() == DependencyScope.BUILD && d.target().equals("generator")));
+        assertEquals(DependencyScope.TEST, model.module("app").externalDependencies().getFirst().scope());
     }
 }
