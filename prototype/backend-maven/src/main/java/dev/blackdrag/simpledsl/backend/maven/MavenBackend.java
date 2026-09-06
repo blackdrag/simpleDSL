@@ -55,23 +55,25 @@ public final class MavenBackend implements BuildBackend {
         }
 
         String compilerRelease = module.compiler() == null ? "21" : compilerRelease(module.compiler());
-        return """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <project xmlns="http://maven.apache.org/POM/4.0.0"
-                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-                  <modelVersion>4.0.0</modelVersion>
-                  <parent>
-                    <groupId>dev.blackdrag.generated</groupId>
-                    <artifactId>generated-build</artifactId>
-                    <version>1.0-SNAPSHOT</version>
-                  </parent>
-                  <artifactId>""" + module.name() + """</artifactId>
-                  <properties>
-                    <maven.compiler.release>""" + compilerRelease + """</maven.compiler.release>
-                  </properties>
-                  <dependencies>
-                """ + dependencies + "  </dependencies>\n" + generationBuild(module, model) + "</project>\n";
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
+                + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
+                + "  <modelVersion>4.0.0</modelVersion>\n"
+                + "  <parent>\n"
+                + "    <groupId>dev.blackdrag.generated</groupId>\n"
+                + "    <artifactId>generated-build</artifactId>\n"
+                + "    <version>1.0-SNAPSHOT</version>\n"
+                + "  </parent>\n"
+                + "  <artifactId>" + module.name() + "</artifactId>\n"
+                + "  <properties>\n"
+                + "    <maven.compiler.release>" + compilerRelease + "</maven.compiler.release>\n"
+                + "  </properties>\n"
+                + "  <dependencies>\n"
+                + dependencies
+                + "  </dependencies>\n"
+                + generationBuild(module, model)
+                + "</project>\n";
     }
 
     private static String generationBuild(Module module, BuildModel model) {
@@ -119,7 +121,7 @@ public final class MavenBackend implements BuildBackend {
                     .append("    </plugins>\n")
                     .append("  </build>\n");
         }
-        return result;
+        return result.toString();
     }
 
     private static void appendModuleDependency(StringBuilder result, String target, DependencyScope scope) {
