@@ -32,6 +32,7 @@ public final class GradleBackend implements BuildBackend {
         String release = module.compiler() == null ? "21" : compilerRelease(module.compiler());
         StringBuilder result = new StringBuilder("plugins { id 'java' }\n\njava { toolchain { languageVersion = JavaLanguageVersion.of(" + release + ") } }\n\n");
         appendGenerationConfiguration(result, module, model);
+        appendTestConfiguration(result, module);
         result.append("dependencies {\n");
         module.dependencies().stream()
                 .filter(d -> model.modules().containsKey(d.target()))
@@ -61,6 +62,12 @@ public final class GradleBackend implements BuildBackend {
             }
         }
         return result.append("}\n").toString();
+    }
+
+    private static void appendTestConfiguration(StringBuilder result, Module module) {
+        if ("junit".equals(module.testFramework())) {
+            result.append("tasks.named('test') { useJUnitPlatform() }\n\n");
+        }
     }
 
     private static void appendGenerationConfiguration(StringBuilder result, Module module, BuildModel model) {
