@@ -24,22 +24,21 @@ public final class MavenBackend implements BuildBackend {
     }
 
     private static String rootPom(BuildModel model) {
-        StringBuilder modules = new StringBuilder();
+        StringBuilder result = new StringBuilder();
+        result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+                .append("<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n")
+                .append("         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+                .append("         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n")
+                .append("  <modelVersion>4.0.0</modelVersion>\n")
+                .append("  <groupId>dev.blackdrag.generated</groupId>\n")
+                .append("  <artifactId>generated-build</artifactId>\n")
+                .append("  <version>1.0-SNAPSHOT</version>\n")
+                .append("  <packaging>pom</packaging>\n")
+                .append("  <modules>\n");
         for (Module module : model.modules().values()) {
-            modules.append("    <module>").append(module.name()).append("</module>\n");
+            result.append("    <module>").append(module.name()).append("</module>\n");
         }
-        return """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <project xmlns="http://maven.apache.org/POM/4.0.0"
-                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>dev.blackdrag.generated</groupId>
-                  <artifactId>generated-build</artifactId>
-                  <version>1.0-SNAPSHOT</version>
-                  <packaging>pom</packaging>
-                  <modules>
-                """ + modules + "  </modules>\n</project>\n""";
+        return result.append("  </modules>\n</project>\n").toString();
     }
 
     private static String modulePom(Module module, BuildModel model) {
@@ -55,25 +54,27 @@ public final class MavenBackend implements BuildBackend {
         }
 
         String compilerRelease = module.compiler() == null ? "21" : compilerRelease(module.compiler());
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
-                + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-                + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
-                + "  <modelVersion>4.0.0</modelVersion>\n"
-                + "  <parent>\n"
-                + "    <groupId>dev.blackdrag.generated</groupId>\n"
-                + "    <artifactId>generated-build</artifactId>\n"
-                + "    <version>1.0-SNAPSHOT</version>\n"
-                + "  </parent>\n"
-                + "  <artifactId>" + module.name() + "</artifactId>\n"
-                + "  <properties>\n"
-                + "    <maven.compiler.release>" + compilerRelease + "</maven.compiler.release>\n"
-                + "  </properties>\n"
-                + "  <dependencies>\n"
-                + dependencies
-                + "  </dependencies>\n"
-                + generationBuild(module, model)
-                + "</project>\n";
+        StringBuilder result = new StringBuilder();
+        result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+                .append("<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n")
+                .append("         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+                .append("         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n")
+                .append("  <modelVersion>4.0.0</modelVersion>\n")
+                .append("  <parent>\n")
+                .append("    <groupId>dev.blackdrag.generated</groupId>\n")
+                .append("    <artifactId>generated-build</artifactId>\n")
+                .append("    <version>1.0-SNAPSHOT</version>\n")
+                .append("  </parent>\n")
+                .append("  <artifactId>").append(module.name()).append("</artifactId>\n")
+                .append("  <properties>\n")
+                .append("    <maven.compiler.release>").append(compilerRelease).append("</maven.compiler.release>\n")
+                .append("  </properties>\n")
+                .append("  <dependencies>\n")
+                .append(dependencies)
+                .append("  </dependencies>\n")
+                .append(generationBuild(module, model))
+                .append("</project>\n");
+        return result.toString();
     }
 
     private static String generationBuild(Module module, BuildModel model) {
